@@ -16,7 +16,7 @@ clock_t MCTNode::start_time;
 MCTNode* MCTNode::sub_tree;
 
 double c = 0.7;
-long long time_constrait = 2.7 * CLOCKS_PER_SEC;
+long long time_constrait = 0.3 * CLOCKS_PER_SEC;
 std::random_device rd;
 std::mt19937 gen(rd());
 int get_random(int min, int max, float param = 5) {
@@ -133,17 +133,23 @@ void MCTNode::backpropagation(int result) {
 }
 
 MCTNode* MCTNode::check_must() {
+    MCTNode* must = nullptr;
     for (int i = 0; i < num_child; i++) {
-        if (children[i]->winner == 1 || children[i]->winner == 2) {
-            return children[i];
+        if (children[i]->winner == 1) {
+            must = children[i];
+        } else {
+            MCTNode * otherwise = new MCTNode(children[i]->prev_x, children[i]->prev_y, 2, board, top, nullptr);
+            if (otherwise->winner == 2) {
+                must = children[i];
+            }
+            delete otherwise;
         }
     }
-    return nullptr;
+    return must;
 }
 
 Point MCTNode::MCTS() {
-    // MCTNode* must = check_must();
-    MCTNode* must = nullptr;
+    MCTNode* must = check_must();
     while (clock() - start_time < time_constrait) {
         MCTNode* node = selection(must);
         node = node->expansion();
@@ -177,10 +183,8 @@ MCTNode* MCTNode::best_child() {
 MCTNode* MCTNode::decision(){
     double best_win_rate = -1;
     MCTNode* node = nullptr;
-    // printf("node %d,%d,%d\n", prev_x, prev_y, prev_side);
     for (int i = 0; i < num_child; i++) {
         double child_win_rate = children[i]->W / children[i]->n;
-        // printf("child node %d,%d,%d, win_rate %f,%d,%f\n", children[i]->prev_x, children[i]->prev_y, children[i]->prev_side, children[i]->W, children[i]->n,child_win_rate);
         if (child_win_rate > best_win_rate) {
             node = children[i];
             best_win_rate = child_win_rate;
