@@ -16,7 +16,7 @@ clock_t MCTNode::start_time;
 MCTNode* MCTNode::sub_tree;
 
 double c = 0.6;
-long long time_constrait = 2.95 * CLOCKS_PER_SEC;
+long long time_constrait = 2.7 * CLOCKS_PER_SEC;
 std::random_device rd;
 std::mt19937 gen(rd());
 int get_random(int min, int max, float param = 5) {
@@ -79,8 +79,8 @@ MCTNode::~MCTNode() {
     }
 }
 
-MCTNode* MCTNode::selection() {
-    MCTNode* node = this;
+MCTNode* MCTNode::selection(MCTNode* must) {
+    MCTNode* node = must ? must : this;
     while (node->children) {
         node = node->best_child();
     }
@@ -132,9 +132,19 @@ void MCTNode::backpropagation(int result) {
     }
 }
 
+MCTNode* MCTNode::check_must() {
+    for (int i = 0; i < num_child; i++) {
+        if (children[i]->winner == 1 || children[i]->winner == 2) {
+            return children[i];
+        }
+    }
+    return nullptr;
+}
+
 Point MCTNode::MCTS() {
+    MCTNode* must = check_must();
     while (clock() - start_time < time_constrait) {
-        MCTNode* node = selection();
+        MCTNode* node = selection(must);
         node = node->expansion();
         int result = node->simulation();
         node->backpropagation(result);

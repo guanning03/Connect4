@@ -27,8 +27,9 @@ public:
     MCTNode(int _prev_x, int _prev_y, int _prev_side, int ** _board, const int * _top, MCTNode* _father);
     ~MCTNode();
     
+    MCTNode* check_must();
     MCTNode* best_child();
-    MCTNode* selection();
+    MCTNode* selection(MCTNode* must);
     MCTNode* expansion();
     int simulation();
     void backpropagation(int result);
