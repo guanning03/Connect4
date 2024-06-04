@@ -142,14 +142,15 @@ MCTNode* MCTNode::check_must() {
 }
 
 Point MCTNode::MCTS() {
-    MCTNode* must = check_must();
+    // MCTNode* must = check_must();
+    MCTNode* must = nullptr;
     while (clock() - start_time < time_constrait) {
         MCTNode* node = selection(must);
         node = node->expansion();
         int result = node->simulation();
         node->backpropagation(result);
     }   
-    sub_tree = decision();
+    sub_tree = must ? must : decision();
     int x = sub_tree->prev_x;
     int y = sub_tree->prev_y;
     return Point(x, y);
