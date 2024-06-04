@@ -15,8 +15,8 @@ int MCTNode::noY;
 clock_t MCTNode::start_time;
 MCTNode* MCTNode::sub_tree;
 
-double c = 0.7;
-long long time_constrait = 0.3 * CLOCKS_PER_SEC;
+double c = 0.7 * 1.414;
+long long time_constrait = 2.7 * CLOCKS_PER_SEC;
 std::random_device rd;
 std::mt19937 gen(rd());
 int get_random(int min, int max, float param = 5) {
