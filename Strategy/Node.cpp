@@ -15,13 +15,24 @@ int MCTNode::noY;
 clock_t MCTNode::start_time;
 MCTNode* MCTNode::sub_tree;
 
-double c = 0.7;
-long long time_constrait = 2.5 * CLOCKS_PER_SEC;
+double c = 0.6;
+long long time_constrait = 2.95 * CLOCKS_PER_SEC;
 std::random_device rd;
 std::mt19937 gen(rd());
-int get_random(int min, int max) {
-    std::uniform_int_distribution<> dis(min, max);
-    return dis(gen);
+int get_random(int min, int max, float param = 5) {
+    if (param == 0) {
+        std::uniform_int_distribution<> dis(min, max);
+        return dis(gen);
+    } else {
+        double mean = (min + max) / 2.0;
+        double stddev = (max - min) / std::sqrt(param + 1.0);
+        std::normal_distribution<> dis(mean, stddev);
+        int result;
+        do {
+            result = std::round(dis(gen));
+        } while (result < min || result > max); 
+        return result;
+    }
 }
 
 MCTNode::MCTNode (int _prev_x, int _prev_y, int _prev_side, int ** _board, const int * _top, MCTNode* _father) :
@@ -93,8 +104,8 @@ MCTNode* MCTNode::expansion() {
 int MCTNode::simulation() {
     MCTNode* node = new MCTNode(prev_x, prev_y, prev_side, board, top, nullptr);
     while (!node->winner) {
-        int play_y = rand() % N;
-        while (node->top[play_y] == 0) play_y = rand() % N;
+        int play_y = get_random(0, N - 1);
+        while (node->top[play_y] == 0) play_y = get_random(0, N - 1);
         MCTNode* new_node = new MCTNode(node->top[play_y] - 1, play_y, 3 - node->prev_side, node->board, node->top, nullptr);
         delete node;
         node = new_node;
