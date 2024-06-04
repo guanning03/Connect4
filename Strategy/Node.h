@@ -33,4 +33,5 @@ public:
     int simulation();
     void backpropagation(int result);
     Point MCTS();
+    MCTNode* decision();
 };

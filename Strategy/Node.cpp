@@ -15,7 +15,7 @@ int MCTNode::noY;
 clock_t MCTNode::start_time;
 MCTNode* MCTNode::sub_tree;
 
-double c = 0.6;
+double c = 0.7;
 long long time_constrait = 2.5 * CLOCKS_PER_SEC;
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -62,7 +62,7 @@ MCTNode::~MCTNode() {
     delete[] top;
     if (children) {
         for (int i = 0; i < num_child; i++) {
-            if (children[i] != sub_tree) delete children[i];
+            if (children[i] && (children[i] != sub_tree)) delete children[i];
         }
         delete[] children;
     }
@@ -73,13 +73,11 @@ MCTNode* MCTNode::selection() {
     while (node->children) {
         node = node->best_child();
     }
-    printf("我们选中的叶子节点是: %d %d %d\n", node->prev_x, node->prev_y, node->prev_side);
     return node;
 }
 
 MCTNode* MCTNode::expansion() {
     if (!winner && !children && n) {
-        printf("我要对这个节点进行扩展：%d, %d, %d\n", prev_x, prev_y, prev_side);
         children = new MCTNode* [N];
         for (int play_y = 0; play_y < N; play_y++) {
             if (top[play_y] - 1 >= 0) {
@@ -88,7 +86,6 @@ MCTNode* MCTNode::expansion() {
         }
         return children[0];
     } else {
-        printf("这个节点是 %d,%d,%d; 因为其winner,children和n是%d,%d,%d,我不扩展它\n",prev_x,prev_y,prev_side,winner,children,n);
         return this;
     }
 }
@@ -113,54 +110,37 @@ void MCTNode::backpropagation(int result) {
     else if (result == 2) reward = -1;
     else reward = 0;
     MCTNode * node = this;
-    printf("before bp\n");
     while (node) {
-        printf("bp time\n");
-        node->W += reward;
+        if (node->prev_side == 1) {
+            node->W += reward;
+        } else {
+            node->W -= reward;
+        }
         node->n += 1;
         node = node->father;
     }
-    printf("after bp\n");
 }
 
 Point MCTNode::MCTS() {
-    // while (clock() - start_time < time_constrait) {
-    //     MCTNode* node = selection();
-    //     node = node->expansion();
-    //     int result = node->simulation();
-    //     node->backpropagation(result);
-    // }   
-    printf("flag1\n");
-    int i = 0;
     while (clock() - start_time < time_constrait) {
-        printf("simu %d\n", i);
         MCTNode* node = selection();
-        printf("simu quat %d\n", i);
         node = node->expansion();
-        printf("simu half %d\n", i);
-        int result = rand() % 3 + 1;
-        // int result = node->simulation();
+        int result = node->simulation();
         node->backpropagation(result);
-        i++;
-    } 
-    printf("flag2\n");
-    sub_tree = best_child();
-    printf("flag3\n");
+    }   
+    sub_tree = decision();
     int x = sub_tree->prev_x;
     int y = sub_tree->prev_y;
-    printf("ready to return decision\n");
     return Point(x, y);
 }
 
 MCTNode* MCTNode::best_child() {
-    printf("best_child\n");
     double best_ucb1 = -DBL_MAX;
     MCTNode* node = nullptr;
-    printf("number of child: %d\n", num_child);
     for (int i = 0; i < num_child; i++) {
         double child_ucb1;
         if (children[i]->n) {
-            child_ucb1 = children[i]->W / children[i]->n + c * std::sqrt(2 * log(n) / children[i]->n);
+            child_ucb1 = children[i]->W / children[i]->n + c * std::sqrt(log(n) / children[i]->n);
         } else {
             child_ucb1 = DBL_MAX;
         }
@@ -169,6 +149,20 @@ MCTNode* MCTNode::best_child() {
             best_ucb1 = child_ucb1;
         }
     }
-    printf("best_child end\n");
+    return node;
+}
+
+MCTNode* MCTNode::decision(){
+    double best_win_rate = -1;
+    MCTNode* node = nullptr;
+    // printf("node %d,%d,%d\n", prev_x, prev_y, prev_side);
+    for (int i = 0; i < num_child; i++) {
+        double child_win_rate = children[i]->W / children[i]->n;
+        // printf("child node %d,%d,%d, win_rate %f,%d,%f\n", children[i]->prev_x, children[i]->prev_y, children[i]->prev_side, children[i]->W, children[i]->n,child_win_rate);
+        if (child_win_rate > best_win_rate) {
+            node = children[i];
+            best_win_rate = child_win_rate;
+        }
+    }
     return node;
 }

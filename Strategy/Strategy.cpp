@@ -57,17 +57,24 @@ extern "C" Point *getPoint(const int M, const int N, const int *top, const int *
 	MCTNode::noX = noX;
 	MCTNode::noY = noY;
 
+	int num_pieces = 0;
+	for (int i = 0; i < M * N; i++){
+		if (_board[i]) num_pieces++;
+	}
+	if (num_pieces == 0 || num_pieces == 1) {
+		MCTNode::sub_tree = nullptr;
+		delete root;
+		root = nullptr;
+	}
+
 	if (!root) {
 		root = new MCTNode(lastX, lastY, 2, board, top, nullptr);
 	} else {
 		delete root;
 		root = MCTNode::sub_tree;
 		root -> father = nullptr;
-		printf("根据我们的操作向下挪一层，新的根节点: prev x y side %d %d %d\n", root->prev_x, root->prev_y, root->prev_side);
-		printf("儿子的数量: %d\n", root -> num_child);
 		for (int i = 0; i < root->num_child; i++) {
 			if (root->children[i]->prev_x == lastX && root->children[i]->prev_y == lastY) {
-				printf("中");
 				MCTNode::sub_tree = root->children[i];
 			}
 		}
@@ -79,8 +86,7 @@ extern "C" Point *getPoint(const int M, const int N, const int *top, const int *
 	Point decision = root->MCTS();
 	x = decision.x;
 	y = decision.y;
-
-	printf("final decision: %d %d\n", x, y);
+	top = nullptr;
 
 	//Add your own code below
 
